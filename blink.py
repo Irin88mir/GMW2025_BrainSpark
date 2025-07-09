@@ -3,6 +3,10 @@ import cv2
 import mediapipe as mp
 import math
 
+BLINK_THRESHOLD = 0.05  # Порог для определения моргания
+blink_window = 10  # Окно в секундах для расчета BPM
+time_side_gaze = 6 # Время отведения взгляда от объекта внимания 
+
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(
     static_image_mode=False,
@@ -17,12 +21,10 @@ GAZE_RIGHT_EYE_INDICES = [362, 385, 386, 263, 374, 373]
 BLINK_LEFT_EYE_INDICES = [33, 160, 158, 133, 153, 144]
 BLINK_RIGHT_EYE_INDICES = [362, 385, 387, 263, 373, 380]
 
-BLINK_THRESHOLD = 0.05  # Порог для определения моргания
-blink_window = 8  # Окно в секундах для расчета BPM
-
 side_gaze = False
 gaze_start_time = 0
 gaze_direction = "Center"
+color = (84, 182, 134)
 
 avg_open = []
 eye_open = True
@@ -71,7 +73,6 @@ def update_blink_stats():
     else:
         bpm = 0
 
-
 cap = cv2.VideoCapture(0)
 while cap.isOpened():
     ret, frame = cap.read()
@@ -86,8 +87,8 @@ while cap.isOpened():
             # Отрисовка landmarks лица
             mp.solutions.drawing_utils.draw_landmarks(
                 frame, face_landmarks, mp_face_mesh.FACEMESH_CONTOURS,
-                mp.solutions.drawing_utils.DrawingSpec(color=(0, 255, 0), thickness=1),
-                mp.solutions.drawing_utils.DrawingSpec(color=(0, 0, 255), thickness=1)
+                mp.solutions.drawing_utils.DrawingSpec(color=(84, 182, 134), thickness=1),
+                mp.solutions.drawing_utils.DrawingSpec(color=(84, 182, 134), thickness=1)
             )
 
             # 1. Обработка направления взгляда
@@ -119,7 +120,7 @@ while cap.isOpened():
                     gaze_start_time = time.time()
                 gaze_direction = current_gaze
             else:
-                if side_gaze and (time.time() - gaze_start_time > 3):
+                if side_gaze and (time.time() - gaze_start_time > time_side_gaze):
                     side_gaze = False
                     gaze_direction = "Center"
 
@@ -143,12 +144,12 @@ while cap.isOpened():
                 eye_open = True
 
             # Отрисовка информации
-            cv2.putText(frame, f"Gaze: {gaze_direction}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            cv2.putText(frame, f"Blinks: {blinks}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            cv2.putText(frame, f"BPM: {bpm:.1f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.putText(frame, f"Gaze: {gaze_direction}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(frame, f"Blinks: {blinks}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+            cv2.putText(frame, f"BPM: {bpm:.1f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
             focus_status = "Focused" if bpm <= 18 and gaze_direction == "Center" else "Unfocused"
-            color = (0, 255, 0) if bpm <= 18 and gaze_direction == "Center" else (0, 0, 255)
+            color = (84, 182, 134) if bpm <= 18 and gaze_direction == "Center" else (0, 0, 255)
             cv2.putText(frame, focus_status, (10, 120),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
