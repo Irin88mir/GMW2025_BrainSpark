@@ -59,11 +59,12 @@ with mp_face.FaceMesh(min_detection_confidence=0.5) as face_mesh:
                     cv2.line(image, eye_points[1], eye_points[5], (0, 255, 255), 1)
                 cv2.line(image, eye_points[2], eye_points[4], (0, 255, 255), 1)
                 cv2.line(image, eye_points[0], eye_points[3], (0, 255, 0), 1)
-
                 cv2.putText(image, f"Avg EAR: {avg_ear:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(image, f"Blinks: {blinks:}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-                cv2.putText(image, f"BPM: {bpm:.1f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
+                if bpm <= 18:
+                    cv2.putText(image, "Focused", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                else:
+                    cv2.putText(image, "Unfocused", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
                 avg_open.append(avg_ear)
                 if len(avg_open) >= 30:
                     avg_open.pop(0)
@@ -73,14 +74,13 @@ with mp_face.FaceMesh(min_detection_confidence=0.5) as face_mesh:
                     blink_times.append(current_time)
                 current_time = time.time()
 
-                # Удаляем старые моргания (старше 30 секунд)
-            while blink_times and current_time - blink_times[0] > 30:
-                blink_times.pop(0)
-            if len(blink_times) >= 2:
-                time_interval = (blink_times[-1] - blink_times[0]) / (len(blink_times) - 1)
-                bpm = 60 / time_interval if time_interval != 0 else 0
-            else:
-                bpm = 0
+                while blink_times and current_time - blink_times[0] > 30:
+                    blink_times.pop(0)
+                if len(blink_times) >= 2:
+                    time_interval = (blink_times[-1] - blink_times[0]) / (len(blink_times) - 1)
+                    bpm = 60 / time_interval if time_interval != 0 else 0
+                else:
+                    bpm = 0
             eye_open = False
         if avg_ear >= sum(avg_open) / len(avg_open) - x:
             eye_open = True
