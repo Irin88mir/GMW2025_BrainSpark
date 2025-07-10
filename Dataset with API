@@ -1,0 +1,33 @@
+import requests
+
+BASE_URL = "http://127.0.0.1:2336"
+
+
+def get_device_info(serial_number=None, device_id=None):
+    """Получает информацию об устройстве по серийному номеру или ID."""
+    endpoint = f"{BASE_URL}/getDeviceInfo"
+    params = {}
+
+    if serial_number:
+        params["sn"] = serial_number.lower()  # Используем 'sn' вместо 'SN'
+    if device_id is not None:
+        params["id"] = device_id  # Используем 'id' вместо 'index'
+
+    try:
+        response = requests.get(endpoint, params=params)
+        response.raise_for_status()
+        device_info = response.json()
+
+        if device_info.get("result") == False:
+            print("⚠️ Сервер вернул ошибку:", device_info.get("error"))
+        else:
+            print("✅ Информация об устройстве:", device_info)
+        return device_info
+
+    except requests.exceptions.RequestException as e:
+        print("❌ Ошибка запроса:", e)
+        return None
+
+
+# Примеры вызова:
+get_device_info(serial_number="0917")
