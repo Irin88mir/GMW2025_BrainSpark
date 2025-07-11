@@ -106,8 +106,10 @@ while True:
     result = get_concentration_with_quality_check()
     if current_time - last_capture_time >= frame_interval and result:
         print(result['concentration'])
+        current_time = datetime.now()
+        timestamp = current_time.strftime("%Y%m%d_%H%M%S_%f")[:-3]
         dir_number = result['concentration'] % 10 + 1
-        cv2.imwrite(f'{main_folder}/{dir_number}0%/frame_{frame_count:04d}.jpg', frame)
+        cv2.imwrite(f'{main_folder}/{dir_number}0%/f"frame_{timestamp}.jpg"', frame)
         frame_count += 1
         last_capture_time = current_time
 
