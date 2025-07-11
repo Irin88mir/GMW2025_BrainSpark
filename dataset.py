@@ -5,11 +5,11 @@ import time
 from typing import Optional, Dict, List
 
 #TO DO
-#проверять только 3 датчика
-#посмотреть чё с нулём
+#Имена файлов
 
 BASE_URL = "http://127.0.0.1:2336"
 TIMEOUT = 3  # сек
+TARGET_FPS = 3
 
 def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
     """Получает качество сигнала для всех каналов устройства"""
@@ -38,7 +38,7 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
         # Получаем качество сигнала
         quality = devices[device_index].get("quality")
         if quality is None:
-            print("В ответе отсутствует информация о качестве сигнала")
+            print("Отсутствует информация о качестве сигнала")
             return None
         return quality
     except requests.exceptions.Timeout:
@@ -54,6 +54,8 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
 def get_concentration_with_quality_check() -> Optional[Dict]:
     """Получает концентрацию только при хорошем сигнале"""
     quality = get_signal_quality()
+    quality[1] = 100
+    quality[4] = 100
     if quality is None:
         print("Ошибка 1")
         return None
@@ -78,17 +80,18 @@ def get_concentration_with_quality_check() -> Optional[Dict]:
         return None
 
 # Создаем папки для сохранения кадров
-if not os.path.exists('data'):
-    os.makedirs('data')
+disk = 'D:'
+main_folder = os.path.join(disk, 'data')
+if not os.path.exists(main_folder):
+    os.makedirs(main_folder)
 for n in range(10):
     dir_name = f"{n+1}0%"
-    dir_path = os.path.join('data', dir_name)
+    dir_path = os.path.join(main_folder, dir_name)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
 video = cv2.VideoCapture(0)
 
-TARGET_FPS = 1
 frame_interval = 1.0 / TARGET_FPS
 
 frame_count = 0
@@ -104,7 +107,7 @@ while True:
     if current_time - last_capture_time >= frame_interval and result:
         print(result['concentration'])
         dir_number = result['concentration'] % 10 + 1
-        cv2.imwrite(f'data/{dir_number}0%/frame_{frame_count:04d}.jpg', frame)
+        cv2.imwrite(f'{main_folder}/{dir_number}0%/frame_{frame_count:04d}.jpg', frame)
         frame_count += 1
         last_capture_time = current_time
 
