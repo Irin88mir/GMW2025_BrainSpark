@@ -8,6 +8,7 @@ BASE_URL = "http://127.0.0.1:2336"
 TIMEOUT = 3  # сек
 TARGET_FPS = 3
 
+print("Начало считывания")
 
 def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
     """Получает качество сигнала для всех каналов устройства"""
@@ -47,8 +48,6 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
 def get_concentration_with_quality_check() -> Optional[Dict]:
     """Получает концентрацию только при хорошем сигнале"""
     quality = get_signal_quality()
-    quality[1] = 100
-    quality[4] = 100
     if quality is None:
         print("Ошибка 1")
         return None
@@ -74,11 +73,11 @@ def get_concentration_with_quality_check() -> Optional[Dict]:
 
 
 # Создаем папки для сохранения кадров
-if not os.path.exists('data'):
-    os.makedirs('data')
-for n in range(3):
-    dir_name = f"{n + 1}"
-    dir_path = os.path.join('data', dir_name)
+if not os.path.exists('data_2'):
+    os.makedirs('data_2')
+for n in range(2):
+    dir_name = f"{n}"
+    dir_path = os.path.join('data_2', dir_name)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
@@ -95,20 +94,17 @@ while True:
     current_time = time.time()
     result = get_concentration_with_quality_check()
 
-    if current_time - last_capture_time >= frame_interval and result:
+    if current_time - last_capture_time >= frame_interval and result and result['concentration'] > 0:
         # Получаем 13-значную временную метку (миллисекунды с эпохи Unix)
         timestamp = int(current_time * 1000)
 
         print(result['concentration'])
-        dir_number = result['concentration'] % 10 + 1
-        if result['concentration'] >= 0 and  result['concentration'] <= 30:
+        if result['concentration'] > 0 and  result['concentration'] <= 50:
             dir_number = 1
-        elif result['concentration'] > 30 and result['concentration'] <= 60:
+        elif result['concentration'] > 50:
             dir_number = 2
-        elif result['concentration'] > 60:
-            dir_number = 3
         # Сохраняем с timestamp вместо frame_count
-        cv2.imwrite(f'data/{dir_number}/frame_{timestamp}.jpg', frame)
+        cv2.imwrite(f'data_2/{dir_number}/frame_{timestamp}.jpg', frame)
         last_capture_time = current_time
 
         # Проверка FPS (оставил для отладки, можно убрать)
