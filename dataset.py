@@ -4,12 +4,10 @@ import os
 import time
 from typing import Optional, Dict, List
 
-#TO DO
-#Имена файлов
-
 BASE_URL = "http://127.0.0.1:2336"
 TIMEOUT = 3  # сек
 TARGET_FPS = 3
+
 
 def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
     """Получает качество сигнала для всех каналов устройства"""
@@ -18,16 +16,13 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
             f"{BASE_URL}/currentDevicesInfo",
             timeout=TIMEOUT
         )
-        # Проверка HTTP-статуса
         if response.status_code != 200:
             print(f"Сервер вернул код {response.status_code}")
             return None
         data = response.json()
-        # Проверка структуры ответа
         if not isinstance(data, dict):
             print("Некорректный формат ответа")
             return None
-        # Проверка наличия устройств
         devices = data.get("devices", [])
         if not devices:
             print("Нет подключенных устройств")
@@ -35,7 +30,6 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
         if len(devices) <= device_index:
             print(f"Устройство с индексом {device_index} не найдено")
             return None
-        # Получаем качество сигнала
         quality = devices[device_index].get("quality")
         if quality is None:
             print("Отсутствует информация о качестве сигнала")
@@ -47,7 +41,6 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
         print(f"Ошибка соединения: {e}")
     except ValueError as e:
         print(f"Ошибка парсинга JSON: {e}")
-
     return None
 
 
@@ -79,13 +72,14 @@ def get_concentration_with_quality_check() -> Optional[Dict]:
         print(f"Ошибка запроса: {e}")
         return None
 
+
 # Создаем папки для сохранения кадров
 disk = 'D:'
 main_folder = os.path.join(disk, 'data')
 if not os.path.exists(main_folder):
     os.makedirs(main_folder)
 for n in range(10):
-    dir_name = f"{n+1}0%"
+    dir_name = f"{n + 1}0%"
     dir_path = os.path.join(main_folder, dir_name)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
@@ -93,8 +87,6 @@ for n in range(10):
 video = cv2.VideoCapture(0)
 
 frame_interval = 1.0 / TARGET_FPS
-
-frame_count = 0
 last_capture_time = time.time()
 
 while True:
@@ -104,21 +96,24 @@ while True:
 
     current_time = time.time()
     result = get_concentration_with_quality_check()
+
     if current_time - last_capture_time >= frame_interval and result:
+        # Получаем 13-значную временную метку (миллисекунды с эпохи Unix)
+        timestamp = int(current_time * 1000)
+
         print(result['concentration'])
-        current_time = datetime.now()
-        timestamp = current_time.strftime("%Y%m%d_%H%M%S_%f")[:-3]
         dir_number = result['concentration'] % 10 + 1
-        cv2.imwrite(f'{main_folder}/{dir_number}0%/f"frame_{timestamp}.jpg"', frame)
-        frame_count += 1
+        # Сохраняем с timestamp вместо frame_count
+        cv2.imwrite(f'{main_folder}/{dir_number}0%/frame_{timestamp}.jpg', frame)
         last_capture_time = current_time
 
-        if frame_count % TARGET_FPS == 0:
+        # Проверка FPS (оставил для отладки, можно убрать)
+        if int(timestamp / 1000) % 1 == 0:  # Проверяем каждую секунду
             elapsed = current_time - (last_capture_time - frame_interval * TARGET_FPS)
             actual_fps = TARGET_FPS / elapsed
             print(f"Current FPS: {actual_fps:.2f}")
 
-    cv2.imshow('Camera Feed ({TARGET_FPS} FPS limit)', frame)
+    cv2.imshow(f'Camera Feed ({TARGET_FPS} FPS limit)', frame)
 
     # Выход по нажатию 'q'
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -126,4 +121,4 @@ while True:
 
 video.release()
 cv2.destroyAllWindows()
-print(f'Сохранено {frame_count} кадров (~{TARGET_FPS} FPS)')
+print('Завершение работы программы')
