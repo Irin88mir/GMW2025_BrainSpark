@@ -74,13 +74,11 @@ def get_concentration_with_quality_check() -> Optional[Dict]:
 
 
 # Создаем папки для сохранения кадров
-disk = 'D:'
-main_folder = os.path.join(disk, 'data')
-if not os.path.exists(main_folder):
-    os.makedirs(main_folder)
-for n in range(10):
-    dir_name = f"{n + 1}0%"
-    dir_path = os.path.join(main_folder, dir_name)
+if not os.path.exists('data'):
+    os.makedirs('data')
+for n in range(3):
+    dir_name = f"{n + 1}"
+    dir_path = os.path.join('data', dir_name)
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
 
@@ -103,8 +101,14 @@ while True:
 
         print(result['concentration'])
         dir_number = result['concentration'] % 10 + 1
+        if result['concentration'] >= 0 and  result['concentration'] <= 30:
+            dir_number = 1
+        elif result['concentration'] > 30 and result['concentration'] <= 60:
+            dir_number = 2
+        elif result['concentration'] > 60:
+            dir_number = 3
         # Сохраняем с timestamp вместо frame_count
-        cv2.imwrite(f'{main_folder}/{dir_number}0%/frame_{timestamp}.jpg', frame)
+        cv2.imwrite(f'data/{dir_number}/frame_{timestamp}.jpg', frame)
         last_capture_time = current_time
 
         # Проверка FPS (оставил для отладки, можно убрать)
