@@ -75,7 +75,7 @@
 
 <table>
   <tr>
-    <td width="100"><img src="images\sergey.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td width="100"><img src="images\sergey.jpg" style="border-radius: 50%; width: 150px; height: 80px; object-fit: cover;"></td>
     <td>Петров Сергей</td>
   </tr>
   <tr>
