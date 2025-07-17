@@ -26,7 +26,7 @@
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 
-<!-- Language: ru -->
+
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -81,7 +81,7 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## О проекте
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
@@ -91,7 +91,7 @@
 
 
 
-### Built With
+### Технологии
 
 * [![Python][Python.js]][Python-url]
 * [![OpenCV][OpenCV.js]][OpenCV-url]
