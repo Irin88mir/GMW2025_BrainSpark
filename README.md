@@ -61,7 +61,7 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
   
-### 🛠 Технологии
+## 🛠 Технологии
 
 * [![Python][Python.js]][Python-url]
 * [![OpenCV][OpenCV.js]][OpenCV-url]
