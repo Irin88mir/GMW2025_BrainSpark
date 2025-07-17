@@ -79,7 +79,7 @@
     <td>Петров Сергей</td>
   </tr>
   <tr>
-    <td><img src="путь_к_фото_тулеевой.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td><img src="images\tanya.jpg.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
     <td>Тулеева Татьяна</td>
   </tr>
   <tr>
