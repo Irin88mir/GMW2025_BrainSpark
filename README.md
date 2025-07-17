@@ -28,25 +28,16 @@
 
 <!-- TABLE OF CONTENTS -->
 <details>
-  <summary>Table of Contents</summary>
+  <summary>Содержание</summary>
   <ol>
-    <li>
-      <a href="#about-the-project">О проекте</a>
-      <ul>
-        <li><a href="#build-with">Содержание</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
+    <li><a href="#-о-проекте">О проекте</a></li>
+    <li><a href="#-функциональность">Функциональность</a></li>
+    <li><a href="#-технологии">Технологии</a></li>
+    <li><a href="#️-использование">Использование</a></li>
+    <li><a href="#-примеры-кода">Примеры кода</a></li>
+    <li><a href="#-структура-проекта">Структура проекта</a></li>
+    <li><a href="#-тестирование">Тестирование</a></li>
+    <li><a href="#-контакты">Контакты</a></li>
   </ol>
 </details>
 
