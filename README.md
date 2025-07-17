@@ -72,10 +72,25 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 👥 Участники проекта
-* Петров Сергей
-* Тулеева Татьяна
-* Миронова Ирина
-* Игнатов Платонов
+
+<table>
+  <tr>
+    <td width="100"><img src="sergey.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td>Петров Сергей</td>
+  </tr>
+  <tr>
+    <td><img src="путь_к_фото_тулеевой.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td>Тулеева Татьяна</td>
+  </tr>
+  <tr>
+    <td><img src="путь_к_фото_мироновой.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td>Миронова Ирина</td>
+  </tr>
+  <tr>
+    <td><img src="путь_к_фото_игнатова.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td>Игнатов Платон</td>
+  </tr>
+</table>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
