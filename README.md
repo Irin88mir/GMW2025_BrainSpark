@@ -97,8 +97,22 @@
 
 ## 🚀 Использование
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## 💻 Примеры кода
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📂 Структура проекта
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 🧪 Тестирование
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## 📧 Контакты
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
