@@ -26,7 +26,7 @@
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 
-
+<!-- Language: ru -->
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
