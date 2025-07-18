@@ -24,6 +24,7 @@ camera_frame = None
 predictions = []
 frame_lock = threading.Lock()
 prediction_lock = threading.Lock()
+streaming_active = False  # Добавлен флаг для управления потоковым видео
 
 class PredictionSystem:
     def __init__(self, model_path):
@@ -102,7 +103,7 @@ class PredictionSystem:
     
     def prediction_loop(self):
         """Основной цикл обработки кадров"""
-        global camera_frame, predictions
+        global camera_frame, predictions, streaming_active
         self.camera = cv2.VideoCapture(0)
         last_prediction_time = time.time()
         
@@ -150,11 +151,14 @@ class PredictionSystem:
             time.sleep(sleep_time)
         
         self.camera.release()
+        streaming_active = False  # Отключаем потоковое видео при остановке
     
     def start(self):
         """Запуск системы предсказаний"""
+        global streaming_active
         if not self.is_active:
             self.is_active = True
+            streaming_active = True  # Включаем потоковое видео
             self.thread = threading.Thread(target=self.prediction_loop)
             self.thread.start()
             return True
@@ -162,10 +166,12 @@ class PredictionSystem:
     
     def stop(self):
         """Остановка системы предсказаний"""
+        global streaming_active
         if self.is_active:
             self.is_active = False
             if self.thread is not None:
                 self.thread.join()
+            streaming_active = False  # Отключаем потоковое видео
             return True
         return False
 
@@ -229,9 +235,13 @@ HTML_TEMPLATE = '''
 
     <script>
         // Обновление изображения
-        setInterval(() => {
-            document.getElementById('cameraFeed').src = "/video_feed?" + Date.now();
-        }, 100);
+        let videoInterval = setInterval(updateVideoFeed, 100);
+        
+        function updateVideoFeed() {
+            if (document.getElementById('cameraFeed').src.includes("/video_feed")) {
+                document.getElementById('cameraFeed').src = "/video_feed?" + Date.now();
+            }
+        }
 
         // Обновление предсказаний
         function updatePredictions() {
@@ -267,6 +277,8 @@ HTML_TEMPLATE = '''
                     document.getElementById('predictions').innerHTML = '<p>Starting...</p>';
                     // Обновляем каждую секунду
                     predictionInterval = setInterval(updatePredictions, 1000);
+                    // Включаем обновление видео
+                    videoInterval = setInterval(updateVideoFeed, 100);
                 });
         }
         
@@ -274,8 +286,11 @@ HTML_TEMPLATE = '''
             fetch('/stop', {method: 'POST'})
                 .then(() => {
                     clearInterval(predictionInterval);
+                    clearInterval(videoInterval);
                     document.getElementById('predictions').innerHTML = 
                         '<p>System stopped. Press "Start System" to begin.</p>';
+                    // Останавливаем видео, устанавливая placeholder
+                    document.getElementById('cameraFeed').src = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
                 });
         }
 
@@ -292,7 +307,10 @@ async def home(request: Request):
 
 @app.get("/video_feed")
 async def video_feed():
-    global camera_frame
+    global camera_frame, streaming_active
+    if not streaming_active:
+        return Response(content=b'', media_type='image/jpeg')
+    
     with frame_lock:
         if camera_frame is not None:
             ret, buffer = cv2.imencode('.jpg', camera_frame)
