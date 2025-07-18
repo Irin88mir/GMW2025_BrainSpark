@@ -56,11 +56,6 @@
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-## 📂 Структура проекта
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 ## 👥 Участники проекта
 
 <table>
