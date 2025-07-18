@@ -83,7 +83,7 @@
     <td>Тулеева Татьяна</td>
   </tr>
   <tr>
-    <td><img src="images\tanya.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
+    <td><img src="images\_ira.jpg.jpg" style="border-radius: 50%; width: 80px; height: 80px; object-fit: cover;"></td>
     <td>Миронова Ирина</td>
   </tr>
   <tr>
