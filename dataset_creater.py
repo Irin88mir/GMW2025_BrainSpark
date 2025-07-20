@@ -6,11 +6,22 @@ import mediapipe as mp
 import numpy as np
 from typing import Optional, Dict, List
 
+'''Создание датасета с учётом задержки нейрогарнитуры и выражения лица'''
+
 BASE_URL = "http://127.0.0.1:2336"
 TIMEOUT = 3  # сек
 TARGET_FPS = 1
+DELAY = 1.7  # Задержка в секундах для синхронизации с ЭЭГ
 DISK = 'D:'
-MAIN_FOLDER = os.path.join(DISK, 'data')
+MAIN_FOLDER = os.path.join(DISK, 'data_delay_bi')
+if not os.path.exists(MAIN_FOLDER):
+    os.makedirs(MAIN_FOLDER)
+for n in range(2):
+    dir_name = f"{n}"
+    dir_path = os.path.join(MAIN_FOLDER, dir_name)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
 
 class FaceExpressionDetector:
     def __init__(self):
@@ -48,7 +59,7 @@ class FaceExpressionDetector:
             right_pupil = np.array([landmarks[473].x, landmarks[473].y])
             pupil_distance = np.linalg.norm(left_pupil - right_pupil)
 
-            # Улучшенный расчет улыбки
+            # Расчет улыбки
             smile_ratio = mouth_width / pupil_distance
             is_smiling = smile_ratio > (1.3 + threshold_smile)
 
@@ -69,6 +80,7 @@ class FaceExpressionDetector:
 
             return all(self.smile_buffer) or all(self.mouth_open_buffer)
         return False
+
 
 def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
     """Получает качество сигнала для всех каналов устройства"""
@@ -104,11 +116,12 @@ def get_signal_quality(device_index: int = 0) -> Optional[List[int]]:
         print(f"Ошибка парсинга JSON: {e}")
     return None
 
+
 def get_concentration_with_quality_check() -> Optional[Dict]:
-    """Получает концентрацию при хорошем сигнале"""
+    """Получает концентрацию только при хорошем сигнале"""
     quality = get_signal_quality()
     if quality is None:
-        print("Проверьте соединение с нейрогарнитурой")
+        print("Ошибка 1")
         return None
     print(f"📶 Качество сигнала: {quality}")
     if not all(q >= 80 for q in quality):
@@ -130,71 +143,96 @@ def get_concentration_with_quality_check() -> Optional[Dict]:
         print(f"Ошибка запроса: {e}")
         return None
 
-def main():
-    print("Начало считывания")
 
-    # Создаем папки для сохранения кадров
-    if not os.path.exists(MAIN_FOLDER):
-        os.makedirs(MAIN_FOLDER)
-    for n in range(2):
-        dir_name = f"{n}"
-        dir_path = os.path.join(MAIN_FOLDER, dir_name)
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+video = cv2.VideoCapture(0)
 
-    # Инициализация детектора выражений лица
-    expression_detector = FaceExpressionDetector()
+frame_interval = 1.0 / TARGET_FPS
+last_capture_time = time.time()
+frame_buffer = []  # Буфер для хранения кадров с временными метками
+if not os.path.exists('data_delay_bi'):
+    os.makedirs('data_delay_bi')
+for n in range(2):
+    dir_name = f'{n}'
+    dir_path = os.path.join('data_delay_bi', dir_name)
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
-    # Настройка камеры
-    video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    if not video.isOpened():
-        video = cv2.VideoCapture(0)
-        if not video.isOpened():
-            print("Ошибка: не удалось открыть камеру")
-            exit()
+# Инициализация детектора выражений лица
+expression_detector = FaceExpressionDetector()
 
-    # Установка параметров камеры
-    video.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    video.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-    video.set(cv2.CAP_PROP_FPS, 15)
+while True:
+    success, frame = video.read()
+    if not success:
+        break
 
-    frame_interval = 1.0 / TARGET_FPS
-    last_capture_time = time.time()
+    current_time = time.time()
 
-    while True:
-        success, frame = video.read()
-        if not success:
-            print("Ошибка чтения кадра")
-            break
+    # Определяем выражение лица
+    expression = expression_detector.detect_expression(frame)
+    print(f"Выражение лица: {'Улыбка/открытый рот' if expression else 'Нейтральное'}")
 
-        current_time = time.time()
-        result = get_concentration_with_quality_check()
-        expression = expression_detector.detect_expression(frame)
-        print(expression)
+    # Сохраняем кадр в буфер с временной меткой и информацией о выражении лица
+    frame_buffer.append((frame, current_time, expression))
 
-        if current_time - last_capture_time >= frame_interval and result and result['concentration'] > 0:
-            timestamp = int(current_time * 1000)
+    # Удаляем старые кадры из буфера (старше DELAY + frame_interval)
+    while frame_buffer and current_time - frame_buffer[0][1] > DELAY + frame_interval:
+        frame_buffer.pop(0)
 
-            print(result['concentration'])
-            if (result['concentration'] > 0 and result['concentration'] <= 70) or expression:
-                dir_number = 0
-            elif result['concentration'] > 70 and not expression:
-                dir_number = 1
+    result = get_concentration_with_quality_check()
 
-            # Сохраняем с timestamp
-            dir_path = os.path.join(MAIN_FOLDER, str(dir_number))
-            cv2.imwrite(os.path.join(dir_path, f'frame_{timestamp}.jpg'), frame)
+    if result and current_time - last_capture_time >= frame_interval and result['concentration'] > 0:
+        # Ищем кадр, который был захвачен примерно DELAY секунд назад
+        target_time = current_time - DELAY
+        closest_frame = None
+        closest_expression = False
+        min_diff = float('inf')
+
+        timestamp = int(current_time * 1000)
+
+        for f, t, expr in frame_buffer:
+            diff = abs(t - target_time)
+            if diff < min_diff:
+                min_diff = diff
+                closest_frame = f
+                closest_expression = expr
+
+        if closest_frame is not None:
+            # Получаем 13-значную временную метку
+            timestamp = int(target_time * 1000)
             last_capture_time = current_time
 
-        cv2.imshow(f'Camera Feed ({TARGET_FPS} FPS limit)', frame)
+            # Проверка FPS (для отладки, можно убрать)
+            if int(timestamp / 1000) % 1 == 0:  # Проверяем каждую секунду
+                elapsed = current_time - (last_capture_time - frame_interval * TARGET_FPS)
+                actual_fps = TARGET_FPS / elapsed
 
-        # Выход по нажатию 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+            # Определяем директорию для сохранения
+            if (result["concentration"] >= 1 and result["concentration"] <= 50) or closest_expression:
+                cv2.imwrite(
+                    f'data_delay_bi/0/{timestamp}_{result["concentration"]}_{int(closest_expression)}.jpg',
+                    closest_frame)
+            elif result["concentration"] >= 71 and not closest_expression:
+                cv2.imwrite(
+                    f'data_delay_bi/1/{timestamp}_{result["concentration"]}_{int(closest_expression)}.jpg',
+                    closest_frame)
 
-    video.release()
-    cv2.destroyAllWindows()
-    print('Завершение работы программы')
+            try:
+                cv2.putText(closest_frame, f'Concentration ({result["concentration"]}%)', (10, 90),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(closest_frame, f'Expression: {"Smile/Open" if closest_expression else "Neutral"}',
+                            (10, 120),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            except:
+                cv2.putText(closest_frame, 'err', (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.imshow('Concentration', closest_frame)
 
-if __name__ == "__main__":
-    main()
+    # Отображаем текущий кадр (без задержки)
+    cv2.imshow('Live Feed', frame)
+
+    # Выход по нажатию 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+video.release()
+cv2.destroyAllWindows()
+print('Завершение работы программы')
