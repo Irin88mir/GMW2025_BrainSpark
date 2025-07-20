@@ -73,14 +73,14 @@ test_loader = DataLoader(test_data, batch_size=64)
 # 7. Инициализация модели
 model = create_model()
 
-# 8. Оптимизатор (используем AdamW для стабильности)
+# 8. Оптимизатор
 optimizer = optim.AdamW(
     [p for p in model.parameters() if p.requires_grad],
     lr=0.01,
     weight_decay=1e-3
 )
 
-# 9. Планировщик (без параметра verbose)
+# 9. Планировщик
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode='max',
