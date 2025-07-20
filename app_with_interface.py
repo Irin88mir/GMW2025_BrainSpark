@@ -14,6 +14,8 @@ from queue import Queue
 import json
 import uvicorn
 
+'''API с интерфейсом для отладки'''
+
 app = FastAPI()
 
 # Инициализация каскада Хаара для обнаружения лиц
