@@ -14,7 +14,7 @@ from queue import Queue
 import json
 import uvicorn
 
-'''API с интерфейсом для отладки'''
+'''API с интерфейсом для отладки, необходимы веса модели "best_Inception_bi_0_7620503418168787.pth"'''
 
 app = FastAPI()
 
