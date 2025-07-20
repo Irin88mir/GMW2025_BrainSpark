@@ -38,7 +38,11 @@ class FaceExpressionDetector:
         self.buffer_size = 3  # Количество кадров для подтверждения
 
     def detect_expression(self, frame, threshold_smile=0.1, threshold_mouth_open=0.2):
-        """Определение выражений лица по кадру"""
+        """
+        Определение выражений лица по кадру
+        threshold_smile - порог определения улыбки (по умолч. 0.1), 
+        threshold_mouth_open - порог для определения открытого рта (по умолч. 0.2)
+        """
         # Предварительная обработка изображения
         frame = cv2.normalize(frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
         frame = cv2.GaussianBlur(frame, (5, 5), 0)
