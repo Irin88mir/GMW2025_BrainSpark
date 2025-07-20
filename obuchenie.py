@@ -6,6 +6,8 @@ from torchvision import datasets, transforms, models
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 
+#Обучение модели Inception
+
 # 1. Определяем устройство в самом начале
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -20,7 +22,7 @@ def create_model():
         nn.Linear(num_ftrs, 512),
         nn.BatchNorm1d(512),
         nn.ReLU(),
-        nn.Linear(512, 3)
+        nn.Linear(512, 2)
     )
 
     # Вспомогательный классификатор
@@ -30,7 +32,7 @@ def create_model():
         nn.Linear(num_aux_ftrs, 512),
         nn.BatchNorm1d(512),
         nn.ReLU(),
-        nn.Linear(512, 3)
+        nn.Linear(512, 2)
     )
 
     # Замораживаем слои
@@ -56,8 +58,8 @@ transform = transforms.Compose([
 ])
 
 # 4. Загрузка данных
-dataset = datasets.ImageFolder("data_faces_3/", transform=transform)
-train_data, test_data = random_split(dataset, [0.7, 0.3])
+dataset = datasets.ImageFolder("data_delay_cropped_binar/", transform=transform)
+train_data, test_data = random_split(dataset, [0.7, 0.3])   
 
 # 5. Веса классов
 class_counts = torch.bincount(torch.tensor([y for _, y in train_data]))
@@ -83,7 +85,7 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(
     optimizer,
     mode='max',
     factor=0.5,
-    patience=5
+    patience=1000
 )
 
 
@@ -96,7 +98,7 @@ def train(model, train_loader, test_loader, optimizer, scheduler, loss_fn, epoch
     for epoch in range(epochs):
         model.train()
         train_loss = 0.0
-        train_iter = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs} [Train]", leave=False)
+        train_iter = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs} [Train]", leave=True)
         for X, y in train_loader:
             X, y = X.to(device), y.to(device)
             optimizer.zero_grad()
@@ -111,7 +113,7 @@ def train(model, train_loader, test_loader, optimizer, scheduler, loss_fn, epoch
         model.eval()
         test_loss = 0.0
         all_preds, all_targets = [], []
-        test_iter = tqdm(test_loader, desc=f"Epoch {epoch + 1}/{epochs} [Test]", leave=False)
+        test_iter = tqdm(test_loader, desc=f"Epoch {epoch + 1}/{epochs} [Test]", leave=True)
         with torch.no_grad():
             for X, y in test_loader:
                 X, y = X.to(device), y.to(device)
@@ -121,7 +123,8 @@ def train(model, train_loader, test_loader, optimizer, scheduler, loss_fn, epoch
                 all_preds.extend(preds.cpu().numpy())
                 all_targets.extend(y.cpu().numpy())
                 test_iter.set_postfix(loss=loss_fn(outputs[0] if isinstance(outputs, tuple) else outputs, y).item())
-epoch_f1 = f1_score(all_targets, all_preds, average='weighted')
+
+        epoch_f1 = f1_score(all_targets, all_preds, average='weighted')
         train_loss /= len(train_loader)
         test_loss /= len(test_loader)
 
@@ -130,13 +133,13 @@ epoch_f1 = f1_score(all_targets, all_preds, average='weighted')
         if epoch_f1 > best_f1:
             best_f1 = epoch_f1
             best_epoch = epoch + 1
-            save_path = f'best_model_{str(best_f1).replace('.', '_')}.pth'
+            save_path = f'best_Inception_bi_{str(best_f1).replace('.', '_')}.pth'
             torch.save(model.state_dict(), save_path)
             print(f"New best model saved with F1: {best_f1:.4f} (Epoch {best_epoch})")
 
-        if epoch - best_epoch >= patience:
-            print(f"\nEarly stopping: No improvement for {patience} epochs. Best F1: {best_f1:.4f}")
-            break
+        #if epoch - best_epoch >= patience:
+            #print(f"\nEarly stopping: No improvement for {patience} epochs. Best F1: {best_f1:.4f}")
+            #break
 
         scheduler.step(epoch_f1)
 
