@@ -10,6 +10,8 @@ import threading
 import time
 import uvicorn
 
+'''Для работы необходим файл "best_Inception_bi_0_7620503418168787.pth"'''
+
 app = FastAPI()
 
 # Инициализация каскада Хаара для обнаружения лиц
