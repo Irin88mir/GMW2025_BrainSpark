@@ -3,6 +3,8 @@ import cv2
 import mediapipe as mp
 import math
 
+'''Алгоритм через facemask, определяет частоту морганий и направление взгляда'''
+
 BLINK_THRESHOLD = 0.05  # Порог для определения моргания
 blink_window = 10  # Окно в секундах для расчета BPM
 time_side_gaze = 6 # Время отведения взгляда от объекта внимания 
